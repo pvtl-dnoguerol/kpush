@@ -40,7 +40,7 @@ public class K8SDeploymentManager implements DeploymentManager {
 
     @Override
     public void createDeployment(V1Deployment d) {
-        logger.debug("Attempting to create deployment: {}", d);
+        logger.debug("Attempting to create deployment: {}", d.getMetadata().getName());
 
         // create deployment
         try {
