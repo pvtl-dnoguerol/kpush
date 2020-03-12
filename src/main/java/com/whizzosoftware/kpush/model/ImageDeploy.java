@@ -4,7 +4,6 @@ import com.whizzosoftware.kpush.k8s.DeploymentHelper;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1Deployment;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;

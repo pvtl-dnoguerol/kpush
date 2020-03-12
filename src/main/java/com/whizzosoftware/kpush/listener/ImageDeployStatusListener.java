@@ -3,11 +3,13 @@ package com.whizzosoftware.kpush.listener;
 import com.whizzosoftware.kpush.event.CreateDeploymentEvent;
 import com.whizzosoftware.kpush.event.ImageDeployStatusEvent;
 import com.whizzosoftware.kpush.event.UpdateDeploymentEvent;
-import com.whizzosoftware.kpush.k8s.DeploymentHelper;
 import com.whizzosoftware.kpush.manager.DeploymentManager;
 import com.whizzosoftware.kpush.manager.ImageManager;
 import com.whizzosoftware.kpush.model.Image;
 import com.whizzosoftware.kpush.model.ImageDeploy;
+
+import static com.whizzosoftware.kpush.k8s.DeploymentHelper.*;
+
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1Deployment;
 import org.slf4j.Logger;
@@ -17,8 +19,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class ImageDeployStatusListener implements ApplicationListener<ImageDeployStatusEvent> {
@@ -40,37 +42,36 @@ public class ImageDeployStatusListener implements ApplicationListener<ImageDeplo
 
         ImageDeploy id = event.getImageDeploy();
         if (id != null) {
-            Collection<Image> images = imageManager.getImages(DeploymentHelper.getAllImageRefs(id.getSpec().getDeployment()));
-            Map<String,String> imageStateMap = new HashMap<>();
-            for (Image i : images) {
-                imageStateMap.put(i.getId(), i.getLatest());
-            }
+            // build a map of image id -> container image version for all images referenced by the imagedeploy
+            Collection<Image> images = imageManager.getImages(getAllImageRefs(id.getSpec().getDeployment()));
+            Map<String, String> imageStateMap = images.stream().collect(Collectors.toMap(Image::getId, Image::getLatest));
 
-            if (!images.isEmpty()) {
+            // if images were found...
+            if (!imageStateMap.isEmpty()) {
                 logger.debug("Found Image resources for ImageDeploy: {}", id.getMetadata().getName());
-
-                // create new deployment object
-                V1Deployment newDeployment = id.getSpec().getDeployment();
-
-                // check for existing K8S deployment
-                V1Deployment d = deployManager.getDeployment(id.getSpec().getDeployment().getMetadata().getNamespace(), id.getSpec().getDeployment().getMetadata().getName());
-                if (d != null) {
-                    logger.debug("Found Deployment referenced by ImageDeploy {}: {}", id.getSpec().getDeployment().getMetadata().getName(), d.getMetadata().getName());
-                    Collection<V1Container> specContainers = DeploymentHelper.getAllContainers(id.getSpec().getDeployment());
-                    for (V1Container c : specContainers) {
-                        if (DeploymentHelper.isImageRef(c.getImage())) {
-                            V1Container c2 = DeploymentHelper.getContainerWithName(d, c.getName());
-                            if (c2 != null && !c2.getImage().equals(imageStateMap.get(DeploymentHelper.decodeImageRef(c.getImage())))) {
-                                DeploymentHelper.replaceAllImageRefs(newDeployment, imageStateMap);
-                                publisher.publishEvent(new UpdateDeploymentEvent(this, newDeployment));
-                                break;
-                            }
+                // check if a deployment already exists with the name referenced by the imagedeploy
+                V1Deployment currentDeployment = deployManager.getDeployment(id.getSpec().getDeployment().getMetadata().getNamespace(), id.getSpec().getDeployment().getMetadata().getName());
+                // if so, check if it needs to be updated
+                if (currentDeployment != null) {
+                    logger.debug("Found Deployment referenced by ImageDeploy {}: {}", id.getSpec().getDeployment().getMetadata().getName(), currentDeployment.getMetadata().getName());
+                    // get all the containers defined by the imagedeploy deployment definition
+                    Collection<V1Container> specContainers = getAllContainers(id.getSpec().getDeployment());
+                    for (V1Container specContainer : specContainers) {
+                        // retrieve the container with the same name from the current deployment
+                        V1Container currentContainer = getContainerWithName(currentDeployment, specContainer.getName());
+                        // if the image name of the current container is different from the spec one, update the deployment
+                        String imageName = (isImageRef(specContainer.getImage())) ? imageStateMap.get(decodeImageRef(specContainer.getImage())) : specContainer.getImage();
+                        if (currentContainer != null && !currentContainer.getImage().equals(imageName)) {
+                            replaceAllImageRefs(id.getSpec().getDeployment(), imageStateMap);
+                            publisher.publishEvent(new UpdateDeploymentEvent(this, id.getSpec().getDeployment()));
+                            break;
                         }
                     }
+                    // if not, create a new one
                 } else {
                     logger.debug("No Deployment referenced by ImageDeploy {} found", id.getSpec().getDeployment().getMetadata().getName());
-                    DeploymentHelper.replaceAllImageRefs(newDeployment, imageStateMap);
-                    publisher.publishEvent(new CreateDeploymentEvent(this, newDeployment));
+                    replaceAllImageRefs(id.getSpec().getDeployment(), imageStateMap);
+                    publisher.publishEvent(new CreateDeploymentEvent(this, id.getSpec().getDeployment()));
                 }
             } else {
                 logger.debug("No Image resources found for ImageDeploy");

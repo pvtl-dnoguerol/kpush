@@ -60,7 +60,6 @@ public class ImageStatusListener implements ApplicationListener<ImageStatusEvent
                     eventPublisher.publishEvent(new UpdateDeploymentEvent(this, newDeployment));
                 } else {
                     logger.debug("Image({}) and Deployment({}) images match: {}", image.getId(), d.getMetadata().getName(), image.getLatest());
-                    logger.debug("Image and deployment match: {}", image.getLatest());
                 }
             } else {
                 logger.debug("Publishing create deployment event");
