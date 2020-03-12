@@ -4,6 +4,7 @@ import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1Deployment;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DeploymentHelper {
     static public Collection<String> getAllImageRefs(V1Deployment d) {
@@ -50,6 +51,15 @@ public class DeploymentHelper {
             }
         }
         return null;
+    }
+
+    static public Collection<ReplaceImageOp> createReplaceImageOps(V1Deployment d) {
+        List<V1Container> containers = d.getSpec().getTemplate().getSpec().getContainers();
+        List<ReplaceImageOp> results = new ArrayList<>();
+        for (int i=0; i < containers.size(); i++) {
+            results.add(new ReplaceImageOp(i, containers.get(i).getImage()));
+        }
+        return results;
     }
 
     static public boolean isImageRef(String s) {

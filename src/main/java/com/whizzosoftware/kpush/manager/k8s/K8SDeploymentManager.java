@@ -1,11 +1,14 @@
 package com.whizzosoftware.kpush.manager.k8s;
 
+import com.whizzosoftware.kpush.k8s.DeploymentHelper;
 import com.whizzosoftware.kpush.manager.DeploymentManager;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.apis.AppsV1Api;
+import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.models.V1Deployment;
 import io.kubernetes.client.models.V1DeploymentList;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -51,5 +54,14 @@ public class K8SDeploymentManager implements DeploymentManager {
     @Override
     public void updateDeployment(V1Deployment d) {
         logger.debug("Attempting to update deployment: {}, {}", d.getMetadata().getNamespace(), d.getMetadata().getName());
+
+        // patch the deployment with new container images
+        try {
+            V1Patch patch = new V1Patch(new ObjectMapper().writeValueAsString(DeploymentHelper.createReplaceImageOps(d)));
+            V1Deployment d2 = apiClient.patchNamespacedDeployment(d.getMetadata().getName(), d.getMetadata().getNamespace(), patch, null, null, null, null);
+            logger.info("Patched deployment: {}", d2.getMetadata().getName());
+        } catch (Exception e) {
+            logger.error("Error updating deployment", e);
+        }
     }
 }
