@@ -1,21 +1,15 @@
 package com.whizzosoftware.kpush.model;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.util.List;
 
+
+@Data
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ImageDeployList {
     private List<ImageDeploy> items;
-
-    public ImageDeployList() {
-    }
-
-    public List<ImageDeploy> getItems() {
-        return items;
-    }
-
-    public void setItems(List<ImageDeploy> items) {
-        this.items = items;
-    }
 }

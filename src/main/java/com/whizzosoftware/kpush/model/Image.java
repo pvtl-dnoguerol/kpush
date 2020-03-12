@@ -1,24 +1,9 @@
 package com.whizzosoftware.kpush.model;
 
+import lombok.Data;
+
+@Data
 public class Image {
-    private String id;
-    private String latest;
-
-    public Image(String id, String latest) {
-        this.id = id;
-        this.latest = latest;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getLatest() {
-        return latest;
-    }
-
-    @Override
-    public String toString() {
-        return "name=" + id + ",latest=" + latest;
-    }
+    private final String id;
+    private final String latest;
 }

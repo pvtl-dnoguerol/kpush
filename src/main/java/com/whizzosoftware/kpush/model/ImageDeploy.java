@@ -3,6 +3,11 @@ package com.whizzosoftware.kpush.model;
 import com.whizzosoftware.kpush.k8s.DeploymentHelper;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1Deployment;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.util.ArrayList;
@@ -10,27 +15,13 @@ import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Accessors(chain = true)
 public class ImageDeploy {
     private Metadata metadata;
     private Spec spec;
-
-    public ImageDeploy() {}
-
-    public Metadata getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Metadata metadata) {
-        this.metadata = metadata;
-    }
-
-    public void setSpec(Spec spec) {
-        this.spec = spec;
-    }
-
-    public Spec getSpec() {
-        return spec;
-    }
 
     public boolean hasContainers() {
         return (spec != null && spec.hasContainers());
@@ -55,89 +46,29 @@ public class ImageDeploy {
         return results;
     }
 
-    public Metadata withNewMetadata() {
-        this.metadata = new Metadata(this);
-        return this.metadata;
-    }
-
-    public Spec withNewSpec() {
-        this.spec = new Spec(this);
-        return this.spec;
-    }
-
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Accessors(chain = true)
     static public class Metadata {
         private ImageDeploy parent;
         private String namespace;
         private String name;
         private Map<String,String> labels;
-
-        public Metadata() {
-        }
-
-        public Metadata(ImageDeploy parent) {
-            this.parent = parent;
-        }
-
-        public String getNamespace() {
-            return namespace;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public Map<String, String> getLabels() {
-            return labels;
-        }
-
-        public Metadata withNamespace(String namespace) {
-            this.namespace = namespace;
-            return this;
-        }
-
-        public Metadata withName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Metadata withLabels(Map<String,String> labels) {
-            this.labels = labels;
-            return this;
-        }
-
-        public ImageDeploy endMetadata() {
-            return parent;
-        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Accessors(chain = true)
     static public class Spec {
         private ImageDeploy parent;
         private V1Deployment deployment;
 
-        public Spec() {
-        }
-
-        public Spec(ImageDeploy parent) {
-            this.parent = parent;
-        }
-
-        public Spec withDeployment(V1Deployment deployment) {
-            this.deployment = deployment;
-            return this;
-        }
-
-        public V1Deployment getDeployment() {
-            return deployment;
-        }
-
         public boolean hasContainers() {
             return (deployment != null && deployment.getSpec().getTemplate().getSpec().getContainers().size() > 0);
-        }
-
-        public ImageDeploy endSpec() {
-            return parent;
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.whizzosoftware.kpush.model;
 
 import com.whizzosoftware.kpush.k8s.DeploymentHelper;
+import com.whizzosoftware.kpush.model.ImageDeploy.Metadata;
 import io.kubernetes.client.models.V1Deployment;
 import io.kubernetes.client.models.V1DeploymentBuilder;
 import io.kubernetes.client.models.V1EnvVarBuilder;
@@ -39,42 +40,39 @@ public class ImageDeployTest {
     private ImageDeploy createImageDeployWithContainers() {
         V1Deployment deployment = new V1DeploymentBuilder().
                 withNewMetadata().
-                    withName("mydeploy").
-                    withNamespace("mynamespace").
-                    withLabels(Collections.singletonMap("app", "mydeployapp")).
+                withName("mydeploy").
+                withNamespace("mynamespace").
+                withLabels(Collections.singletonMap("app", "mydeployapp")).
                 endMetadata().
                 withNewSpec().
-                    withReplicas(2).
-                    withNewSelector().
-                        withMatchLabels(Collections.singletonMap("app", "matchapp")).
-                    endSelector().
-                    withNewTemplate().
-                        withNewMetadata().
-                            withLabels(Collections.singletonMap("app", "mydeployapp2")).
-                        endMetadata().
-                        withNewSpec().
-                            withContainers().
-                                addNewContainer().
-                                    withName("container1").
-                                    withImage("image1").
-                                    withEnv(Collections.singletonList(new V1EnvVarBuilder().withName("foo").withValue("bar").build())).
-                                endContainer().
-                                addNewContainer().
-                                    withName("container2").
-                                    withImage(DeploymentHelper.encodeImageRef("extimage2")).
-                                endContainer().
-                        endSpec().
-                    endTemplate().
+                withReplicas(2).
+                withNewSelector().
+                withMatchLabels(Collections.singletonMap("app", "matchapp")).
+                endSelector().
+                withNewTemplate().
+                withNewMetadata().
+                withLabels(Collections.singletonMap("app", "mydeployapp2")).
+                endMetadata().
+                withNewSpec().
+                withContainers().
+                addNewContainer().
+                withName("container1").
+                withImage("image1").
+                withEnv(Collections.singletonList(new V1EnvVarBuilder().withName("foo").withValue("bar").build())).
+                endContainer().
+                addNewContainer().
+                withName("container2").
+                withImage(DeploymentHelper.encodeImageRef("extimage2")).
+                endContainer().
+                endSpec().
+                endTemplate().
                 endSpec().build();
 
-        return new ImageDeploy().
-                withNewMetadata().
-                withName("my-image-deploy").
-                withLabels(Collections.singletonMap("app", "myapp")).
-                endMetadata().
-                withNewSpec().
-                withDeployment(deployment).
-                endSpec();
+        return new ImageDeploy()
+                .setMetadata(new Metadata()
+                        .setName("my-image-deploy")
+                        .setLabels(Collections.singletonMap("app", "myapp")))
+                .setSpec(new ImageDeploy.Spec().setDeployment(deployment));
     }
 
     private ImageDeploy createImageDeployWithoutContainers() {
@@ -98,13 +96,10 @@ public class ImageDeployTest {
                 endTemplate().
                 endSpec().build();
 
-        return new ImageDeploy().
-                withNewMetadata().
-                withName("my-image-deploy").
-                withLabels(Collections.singletonMap("app", "myapp")).
-                endMetadata().
-                withNewSpec().
-                withDeployment(deployment).
-                endSpec();
+        return new ImageDeploy()
+                .setMetadata(new Metadata()
+                .setName("my-image-deploy")
+                .setLabels(Collections.singletonMap("app", "myapp")))
+                .setSpec(new ImageDeploy.Spec().setDeployment(deployment));
     }
 }

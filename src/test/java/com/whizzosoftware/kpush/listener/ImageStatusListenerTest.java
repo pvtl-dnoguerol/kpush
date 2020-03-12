@@ -1,7 +1,7 @@
 package com.whizzosoftware.kpush.listener;
 
-import com.whizzosoftware.kpush.TestModelHelper;
 import com.whizzosoftware.kpush.MockApplicationEventPublisher;
+import com.whizzosoftware.kpush.TestModelHelper;
 import com.whizzosoftware.kpush.event.CreateDeploymentEvent;
 import com.whizzosoftware.kpush.event.ImageStatusEvent;
 import com.whizzosoftware.kpush.event.UpdateDeploymentEvent;
@@ -10,6 +10,8 @@ import com.whizzosoftware.kpush.manager.MockDeploymentManager;
 import com.whizzosoftware.kpush.manager.MockImageDeployManager;
 import com.whizzosoftware.kpush.model.Image;
 import com.whizzosoftware.kpush.model.ImageDeploy;
+import com.whizzosoftware.kpush.model.ImageDeploy.Metadata;
+import com.whizzosoftware.kpush.model.ImageDeploy.Spec;
 import io.kubernetes.client.models.V1DeploymentBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +36,7 @@ public class ImageStatusListenerTest {
         MockImageDeployManager imageDeliveryManager = new MockImageDeployManager();
         imageDeliveryManager.addImageDeploy(TestModelHelper.createImageDeploy("default", "imagedeploy", "deploy1", "image", 1));
         MockDeploymentManager deploymentManager = new MockDeploymentManager();
-        deploymentManager.addDeployment(TestModelHelper.createDeployment("default", "deploy1", "latest",1));
+        deploymentManager.addDeployment(TestModelHelper.createDeployment("default", "deploy1", "latest", 1));
         MockApplicationEventPublisher publisher = new MockApplicationEventPublisher();
         ImageStatusListener listener = new ImageStatusListener(imageDeliveryManager, deploymentManager, publisher);
         assertEquals(0, publisher.getPublishedEventCount());
@@ -46,13 +48,11 @@ public class ImageStatusListenerTest {
     public void testImageUpdatedWithMonitoredImageTagAndExistingDeploymentAndImageChange() {
         MockImageDeployManager imageDeployManager = new MockImageDeployManager();
 
-        imageDeployManager.addImageDeploy(new ImageDeploy().
-                withNewMetadata().
-                    withName("namespace").
-                    withName("imagedeploy1").
-                endMetadata().
-                withNewSpec().
-                withDeployment(new V1DeploymentBuilder().
+        imageDeployManager.addImageDeploy(new ImageDeploy()
+                .setMetadata(new Metadata()
+                        .setNamespace("namespace")
+                        .setName("imagedeploy1"))
+                .setSpec(new Spec().setDeployment(new V1DeploymentBuilder().
                         withNewMetadata().
                         withNamespace("namespace").
                         withName("deploy1").
@@ -67,10 +67,9 @@ public class ImageStatusListenerTest {
                         endContainer().
                         endSpec().
                         endTemplate().
-                        endSpec().build()
-                ).
-                endSpec()
+                        endSpec().build()))
         );
+
 
         MockDeploymentManager deploymentManager = new MockDeploymentManager();
         deploymentManager.addDeployment(new V1DeploymentBuilder().
@@ -97,7 +96,7 @@ public class ImageStatusListenerTest {
         listener.onApplicationEvent(new ImageStatusEvent(this, new Image("image1", "latest")));
         assertEquals(1, publisher.getPublishedEventCount());
         assertTrue(publisher.getEvent(0) instanceof UpdateDeploymentEvent);
-        UpdateDeploymentEvent event = (UpdateDeploymentEvent)publisher.getEvent(0);
+        UpdateDeploymentEvent event = (UpdateDeploymentEvent) publisher.getEvent(0);
         assertEquals("namespace", event.getDeployment().getMetadata().getNamespace());
         assertEquals("deploy1", event.getDeployment().getMetadata().getName());
     }
@@ -113,7 +112,7 @@ public class ImageStatusListenerTest {
         listener.onApplicationEvent(new ImageStatusEvent(this, new Image("image1", "latest")));
         assertEquals(1, publisher.getPublishedEventCount());
         assertTrue(publisher.getEvent(0) instanceof CreateDeploymentEvent);
-        CreateDeploymentEvent event = (CreateDeploymentEvent)publisher.getEvent(0);
+        CreateDeploymentEvent event = (CreateDeploymentEvent) publisher.getEvent(0);
         assertEquals("default", event.getDeployment().getMetadata().getNamespace());
         assertEquals("deploy1", event.getDeployment().getMetadata().getName());
         //assertEquals("latest", event.getImage());
