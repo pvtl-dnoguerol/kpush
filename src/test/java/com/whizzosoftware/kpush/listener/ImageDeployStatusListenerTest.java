@@ -134,13 +134,83 @@ public class ImageDeployStatusListenerTest {
     public void testNewImageDeployWithImageAndExistingDeploymentWithSameImage() {
         MockImageManager imageManager = new MockImageManager();
         imageManager.addImage(new Image("myimage", "latest"));
+
         MockDeploymentManager deployManager = new MockDeploymentManager();
         deployManager.addDeployment(TestModelHelper.createDeployment("default", "mydeploy", "latest", 1));
+
         MockApplicationEventPublisher publisher = new MockApplicationEventPublisher();
 
         ImageDeployStatusListener listener = new ImageDeployStatusListener(imageManager, deployManager, publisher);
         assertEquals(0, publisher.getPublishedEventCount());
-        listener.onApplicationEvent(new ImageDeployStatusEvent(this, TestModelHelper.createImageDeploy( "default","myimagedeploy", "mydeploy", "myImageName", 1)));
+        listener.onApplicationEvent(new ImageDeployStatusEvent(this, TestModelHelper.createImageDeploy( "default","myimagedeploy", "mydeploy", "myimage", 1)));
         assertEquals(0, publisher.getPublishedEventCount());
     }
+
+    @Test
+    public void testNewImageDeployWithImageAndExistingDeploymentWithTwoOldImages() {
+        MockImageManager imageManager = new MockImageManager();
+        imageManager.addImage(new Image("image1", "latest"));
+        imageManager.addImage(new Image("image2", "latest"));
+
+        MockDeploymentManager deployManager = new MockDeploymentManager();
+        deployManager.addDeployment(new V1DeploymentBuilder().
+                withNewMetadata().
+                withNamespace("default").
+                withName("deploy1").
+                endMetadata().
+                withNewSpec().
+                withNewTemplate().
+                withNewSpec().
+                withContainers().
+                addNewContainer().
+                withName("container1").
+                withImage("old1").
+                endContainer().
+                addNewContainer().
+                withName("container2").
+                withImage("old2").
+                endContainer().
+                endSpec().
+                endTemplate().
+                endSpec().build()
+        );
+
+        MockApplicationEventPublisher publisher = new MockApplicationEventPublisher();
+
+        ImageDeployStatusListener listener = new ImageDeployStatusListener(imageManager, deployManager, publisher);
+        assertEquals(0, publisher.getPublishedEventCount());
+        listener.onApplicationEvent(new ImageDeployStatusEvent(this, new ImageDeploy().
+                withNewMetadata().
+                withNamespace("default").
+                withName("imagedeploy1").
+                endMetadata().
+                withNewSpec().
+                withDeployment(new V1DeploymentBuilder().
+                        withNewMetadata().
+                        withNamespace("default").
+                        withName("deploy1").
+                        endMetadata().
+                        withNewSpec().
+                        withNewTemplate().
+                        withNewSpec().
+                        withContainers().
+                        addNewContainer().
+                        withName("container1").
+                        withImage(DeploymentHelper.encodeImageRef("image1")).
+                        endContainer().
+                        addNewContainer().
+                        withName("container2").
+                        withImage(DeploymentHelper.encodeImageRef("image2")).
+                        endContainer().
+                        endSpec().
+                        endTemplate().
+                        endSpec().build()
+                ).
+                endSpec()
+        ));
+
+        assertEquals(1, publisher.getPublishedEventCount());
+        assertTrue(publisher.getEvent(0) instanceof UpdateDeploymentEvent);
+    }
+
 }

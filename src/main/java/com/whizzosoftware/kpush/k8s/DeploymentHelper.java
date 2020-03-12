@@ -3,10 +3,7 @@ package com.whizzosoftware.kpush.k8s;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1Deployment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DeploymentHelper {
     static public Collection<String> getAllImageRefs(V1Deployment d) {
@@ -20,7 +17,11 @@ public class DeploymentHelper {
     }
 
     static public Collection<V1Container> getAllContainers(V1Deployment d) {
-        return d.getSpec().getTemplate().getSpec().getContainers();
+        if (d != null && d.getSpec() != null && d.getSpec().getTemplate() != null) {
+            return d.getSpec().getTemplate().getSpec().getContainers();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     static public void replaceAllImageRefs(V1Deployment d, Map<String,String> refToImageMap) {
@@ -52,11 +53,11 @@ public class DeploymentHelper {
     }
 
     static public boolean isImageRef(String s) {
-        return (s.startsWith("REF:"));
+        return (s.startsWith("REF="));
     }
 
     static public String encodeImageRef(String imageId) {
-        return "REF:" + imageId;
+        return "REF=" + imageId;
     }
 
     static public String decodeImageRef(String imageRef) {
@@ -65,5 +66,14 @@ public class DeploymentHelper {
         } else {
             return imageRef;
         }
+    }
+
+    public static boolean hasImageRefs(V1Deployment d, Collection<String> refs) {
+        for (V1Container c : getAllContainers(d)) {
+            if (isImageRef(c.getImage()) && refs.contains(encodeImageRef(c.getImage()))) {
+                return true;
+            }
+        }
+        return false;
     }
 }

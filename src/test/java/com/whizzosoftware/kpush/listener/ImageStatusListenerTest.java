@@ -5,6 +5,7 @@ import com.whizzosoftware.kpush.MockApplicationEventPublisher;
 import com.whizzosoftware.kpush.event.CreateDeploymentEvent;
 import com.whizzosoftware.kpush.event.ImageStatusEvent;
 import com.whizzosoftware.kpush.event.UpdateDeploymentEvent;
+import com.whizzosoftware.kpush.k8s.DeploymentHelper;
 import com.whizzosoftware.kpush.manager.MockDeploymentManager;
 import com.whizzosoftware.kpush.manager.MockImageDeployManager;
 import com.whizzosoftware.kpush.model.Image;
@@ -62,7 +63,7 @@ public class ImageStatusListenerTest {
                         withContainers().
                         addNewContainer().
                         withName("container1").
-                        withImage("REF:image1").
+                        withImage(DeploymentHelper.encodeImageRef("image1")).
                         endContainer().
                         endSpec().
                         endTemplate().

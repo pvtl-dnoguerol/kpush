@@ -1,5 +1,6 @@
 package com.whizzosoftware.kpush.model;
 
+import com.whizzosoftware.kpush.k8s.DeploymentHelper;
 import io.kubernetes.client.models.V1Deployment;
 import io.kubernetes.client.models.V1DeploymentBuilder;
 import io.kubernetes.client.models.V1EnvVarBuilder;
@@ -60,7 +61,7 @@ public class ImageDeployTest {
                                 endContainer().
                                 addNewContainer().
                                     withName("container2").
-                                    withImage("REF:extimage2").
+                                    withImage(DeploymentHelper.encodeImageRef("extimage2")).
                                 endContainer().
                         endSpec().
                     endTemplate().

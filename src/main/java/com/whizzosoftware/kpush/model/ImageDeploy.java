@@ -3,11 +3,13 @@ package com.whizzosoftware.kpush.model;
 import com.whizzosoftware.kpush.k8s.DeploymentHelper;
 import io.kubernetes.client.models.V1Container;
 import io.kubernetes.client.models.V1Deployment;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ImageDeploy {
     private Metadata metadata;
     private Spec spec;
@@ -16,6 +18,14 @@ public class ImageDeploy {
 
     public Metadata getMetadata() {
         return metadata;
+    }
+
+    public void setMetadata(Metadata metadata) {
+        this.metadata = metadata;
+    }
+
+    public void setSpec(Spec spec) {
+        this.spec = spec;
     }
 
     public Spec getSpec() {
@@ -55,11 +65,15 @@ public class ImageDeploy {
         return this.spec;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     static public class Metadata {
         private ImageDeploy parent;
         private String namespace;
         private String name;
         private Map<String,String> labels;
+
+        public Metadata() {
+        }
 
         public Metadata(ImageDeploy parent) {
             this.parent = parent;
@@ -97,9 +111,13 @@ public class ImageDeploy {
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     static public class Spec {
         private ImageDeploy parent;
         private V1Deployment deployment;
+
+        public Spec() {
+        }
 
         public Spec(ImageDeploy parent) {
             this.parent = parent;
