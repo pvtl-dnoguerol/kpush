@@ -38,15 +38,15 @@ public class ImageStatusListener implements ApplicationListener<ImageStatusEvent
 
         Image image = event.getImage();
 
-        Collection<ImageDeploy> imageDeploys = imageDeployManager.getImageDeploysForImageName(image.getId());
-        logger.debug("Found {} ImageDeploy resource(s) with reference to Image {}", imageDeploys.size(), image.getId());
+        Collection<ImageDeploy> imageDeploys = imageDeployManager.getImageDeploysForImageName(image.getName());
+        logger.debug("Found {} ImageDeploy resource(s) with reference to Image {}", imageDeploys.size(), image.getName());
         for (ImageDeploy id : imageDeploys) {
             V1Deployment d = deploymentManager.getDeployment(id.getSpec().getDeployment().getMetadata().getNamespace(), id.getSpec().getDeployment().getMetadata().getName());
             if (d != null) {
                 logger.debug("Found Deployment referenced by ImageDeploy {}: {}", id.getSpec().getDeployment().getMetadata().getName(), d.getMetadata().getName());
                 List<String> targetContainerNames = new ArrayList<>();
                 // iterate through all containers that reference the changed image id...
-                for (V1Container c : id.getContainersWithImageRef(image.getId())) {
+                for (V1Container c : id.getContainersWithImageRef(image.getName())) {
                     // ...and build a list of those that are not updated to the latest image
                     V1Container c2 = DeploymentHelper.getContainerWithName(d, c.getName());
                     if (c2 != null && !image.getLatest().equals(c2.getImage())) {
@@ -56,15 +56,15 @@ public class ImageStatusListener implements ApplicationListener<ImageStatusEvent
                 if (targetContainerNames.size() > 0) {
                     logger.debug("Publishing update deployment event");
                     V1Deployment newDeployment = id.getSpec().getDeployment();
-                    DeploymentHelper.replaceAllImageRefs(newDeployment, Collections.singletonMap(image.getId(), image.getLatest()));
+                    DeploymentHelper.replaceAllImageRefs(newDeployment, Collections.singletonMap(image.getName(), image.getLatest()));
                     eventPublisher.publishEvent(new UpdateDeploymentEvent(this, newDeployment));
                 } else {
-                    logger.debug("Image({}) and Deployment({}) images match: {}", image.getId(), d.getMetadata().getName(), image.getLatest());
+                    logger.debug("Image({}) and Deployment({}) images match: {}", image.getName(), d.getMetadata().getName(), image.getLatest());
                 }
             } else {
                 logger.debug("Publishing create deployment event");
                 V1Deployment newDeployment = id.getSpec().getDeployment();
-                DeploymentHelper.replaceAllImageRefs(newDeployment, Collections.singletonMap(image.getId(), image.getLatest()));
+                DeploymentHelper.replaceAllImageRefs(newDeployment, Collections.singletonMap(image.getName(), image.getLatest()));
                 eventPublisher.publishEvent(new CreateDeploymentEvent(this, newDeployment));
             }
         }

@@ -61,19 +61,6 @@ public class DeploymentHelper {
     }
 
     static public String decodeImageRef(String imageRef) {
-        if (isImageRef(imageRef)) {
-            return imageRef.substring(4);
-        } else {
-            return imageRef;
-        }
-    }
-
-    public static boolean hasImageRefs(V1Deployment d, Collection<String> refs) {
-        for (V1Container c : getAllContainers(d)) {
-            if (isImageRef(c.getImage()) && refs.contains(encodeImageRef(c.getImage()))) {
-                return true;
-            }
-        }
-        return false;
+        return isImageRef(imageRef) ? imageRef.substring(4) : imageRef;
     }
 }

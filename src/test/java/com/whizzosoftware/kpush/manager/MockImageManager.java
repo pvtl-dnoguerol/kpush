@@ -30,6 +30,6 @@ public class MockImageManager implements ImageManager {
     }
 
     public void addImage(Image image) {
-        images.put(image.getId(), image);
+        images.put(image.getName(), image);
     }
 }

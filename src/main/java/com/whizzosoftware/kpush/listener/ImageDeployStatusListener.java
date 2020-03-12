@@ -44,7 +44,7 @@ public class ImageDeployStatusListener implements ApplicationListener<ImageDeplo
         if (id != null) {
             // build a map of image id -> container image version for all images referenced by the imagedeploy
             Collection<Image> images = imageManager.getImages(getAllImageRefs(id.getSpec().getDeployment()));
-            Map<String, String> imageStateMap = images.stream().collect(Collectors.toMap(Image::getId, Image::getLatest));
+            Map<String, String> imageStateMap = images.stream().collect(Collectors.toMap(Image::getName, Image::getLatest));
 
             // if images were found...
             if (!imageStateMap.isEmpty()) {
@@ -56,6 +56,7 @@ public class ImageDeployStatusListener implements ApplicationListener<ImageDeplo
                     logger.debug("Found Deployment referenced by ImageDeploy {}: {}", id.getSpec().getDeployment().getMetadata().getName(), currentDeployment.getMetadata().getName());
                     // get all the containers defined by the imagedeploy deployment definition
                     Collection<V1Container> specContainers = getAllContainers(id.getSpec().getDeployment());
+                    boolean updated = false;
                     for (V1Container specContainer : specContainers) {
                         // retrieve the container with the same name from the current deployment
                         V1Container currentContainer = getContainerWithName(currentDeployment, specContainer.getName());
@@ -64,10 +65,14 @@ public class ImageDeployStatusListener implements ApplicationListener<ImageDeplo
                         if (currentContainer != null && !currentContainer.getImage().equals(imageName)) {
                             replaceAllImageRefs(id.getSpec().getDeployment(), imageStateMap);
                             publisher.publishEvent(new UpdateDeploymentEvent(this, id.getSpec().getDeployment()));
+                            updated = true;
                             break;
                         }
                     }
-                    // if not, create a new one
+                    if (!updated) {
+                        logger.debug("Deployment({}) matches referenced Image resources: {}", currentDeployment.getMetadata().getName(), imageStateMap);
+                    }
+                // if not, create a new one
                 } else {
                     logger.debug("No Deployment referenced by ImageDeploy {} found", id.getSpec().getDeployment().getMetadata().getName());
                     replaceAllImageRefs(id.getSpec().getDeployment(), imageStateMap);
