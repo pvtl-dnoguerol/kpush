@@ -24,6 +24,36 @@ The `release.yml` file in the `k8s` directory contains the CRD for `ImageDeploy`
     kubectl create ns kpush
     kubectl apply -f release.yml
 
+Once it is running, you will need to create `ImageResource` resources in order to do anything useful. Here is an example:
+
+    apiVersion: crd.whizzosoftware.com/v1alpha1
+    kind: ImageDeploy
+    metadata:
+      name: my-image-deploy
+      namespace: default
+    spec:
+      deployment:
+        metadata:
+          name: my-app
+          namespace: default
+          labels:
+            app: my-app
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: my-app
+          template:
+            metadata:
+              labels:
+                app: my-app
+            spec:
+              containers:
+                - name: my-app
+                  image: REF=imagename
+
+Note the container definition uses a `REF=` prefix for the image name. The name references the name of an `Image` resource which will be looked up to determine the latest available container image. The reference will be replaced with the actual container image in the resulting `Deployment` resource change. In the case of *kpack*, this would be the name of the `Image` resource created to support builds. Multiple containers with `Image` references are supported. 
+
 ## TODO
 
 * The controller currently polls for `Image` and `ImageDeploy` resources. This is woefully inefficient and needs to be refactored to a watch. 
