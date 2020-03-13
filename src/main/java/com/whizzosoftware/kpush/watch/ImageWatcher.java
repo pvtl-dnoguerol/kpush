@@ -2,7 +2,6 @@ package com.whizzosoftware.kpush.watch;
 
 import com.google.gson.reflect.TypeToken;
 import com.whizzosoftware.kpush.event.ImageStatusEvent;
-import com.whizzosoftware.kpush.manager.k8s.K8SImageManager;
 import com.whizzosoftware.kpush.model.Image;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.apis.CustomObjectsApi;

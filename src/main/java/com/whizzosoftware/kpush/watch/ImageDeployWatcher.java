@@ -1,4 +1,4 @@
-package com.whizzosoftware.kpush.informer;
+package com.whizzosoftware.kpush.watch;
 
 import com.google.gson.reflect.TypeToken;
 import com.whizzosoftware.kpush.event.ImageDeployStatusEvent;
