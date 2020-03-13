@@ -19,7 +19,7 @@ import java.io.IOException;
 
 @Component
 public class ImageWatcher {
-    private final Logger logger = LoggerFactory.getLogger(K8SImageManager.class);
+    private final Logger logger = LoggerFactory.getLogger(ImageWatcher.class);
 
     @Value("${IMAGE_CRD_GROUP:build.pivotal.io}")
     public String CRD_GROUP;

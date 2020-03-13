@@ -2,8 +2,6 @@ package com.whizzosoftware.kpush.informer;
 
 import com.google.gson.reflect.TypeToken;
 import com.whizzosoftware.kpush.event.ImageDeployStatusEvent;
-import com.whizzosoftware.kpush.manager.k8s.K8SImageDeployManager;
-import com.whizzosoftware.kpush.manager.k8s.K8SImageManager;
 import com.whizzosoftware.kpush.model.ImageDeploy;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.apis.CustomObjectsApi;
@@ -16,11 +14,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class ImageDeployWatcher {
-    private final Logger logger = LoggerFactory.getLogger(K8SImageManager.class);
+    private final Logger logger = LoggerFactory.getLogger(ImageDeployWatcher.class);
 
     public static final String CRD_GROUP = "crd.whizzosoftware.com";
     public static final String CRD_VERSION = "v1alpha1";
