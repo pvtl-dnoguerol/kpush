@@ -201,4 +201,4 @@ spec:
       serviceAccountName: kpush-controller
       containers:
       - name: kpush
-        image: harbor.local.whizzosoftware.com/whizzo/kpush:latest
+        image: whizzosoftware/kpush:latest
