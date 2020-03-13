@@ -52,8 +52,4 @@ Once it is running, you will need to create `ImageResource` resources in order t
                 - name: my-app
                   image: REF=imagename
 
-Note the container definition uses a `REF=` prefix for the image name. The name references the name of an `Image` resource which will be looked up to determine the latest available container image. The reference will be replaced with the actual container image in the resulting `Deployment` resource change. In the case of *kpack*, this would be the name of the `Image` resource created to support builds. Multiple containers with `Image` references are supported. 
-
-## TODO
-
-* The controller currently polls for `Image` and `ImageDeploy` resources. This is woefully inefficient and needs to be refactored to a watch. 
+Note the container definition uses a `REF=` prefix for the image name. The name references the name of an `Image` resource which will be looked up to determine the latest available container image. The reference will be replaced with the actual container image in the resulting `Deployment` resource change. In the case of *kpack*, this would be the name of the `Image` resource created to support builds. Multiple containers with `Image` references are supported.
